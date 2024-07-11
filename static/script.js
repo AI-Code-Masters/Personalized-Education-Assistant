@@ -33,14 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function getBotResponse(message) {
-        const response = await fetch('/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message }),
-        });
-        const data = await response.json();
-        return data.response;
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message }),
+            });
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            return data.response;
+        } catch (error) {
+            console.error('Error fetching bot response:', error);
+            return 'Error fetching response';
+        }
     }
 });

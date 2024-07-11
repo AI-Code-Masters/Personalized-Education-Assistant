@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import nltk
 from nltk.chat.util import Chat, reflections
 
@@ -38,6 +39,11 @@ pairs = [
 
 chat = Chat(pairs, reflections)
 
+# Load pre-trained model and tokenizer
+model_name = 'gpt2'
+tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+model = GPT2LMHeadModel.from_pretrained(model_name)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -46,6 +52,12 @@ def index():
 def chat_response():
     user_message = request.json.get("message")
     bot_response = chat.respond(user_message)
+    
+    if bot_response is None:  
+        input_ids = tokenizer.encode(user_message, return_tensors='pt')
+        output = model.generate(input_ids, max_length=50, num_return_sequences=1, pad_token_id=tokenizer.eos_token_id,temperature=0.9,top_k=50)
+        bot_response = tokenizer.decode(output[0], skip_special_tokens=True)
+    
     return jsonify({"response": bot_response})
 
 if __name__ == "__main__":
